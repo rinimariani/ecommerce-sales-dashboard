@@ -12,24 +12,28 @@ import plotly.graph_objects as go
 import streamlit as st
 
 # --------------------------------------------------------------------------
-# Palette (fixed categorical order + single sequential hue) — see dataviz skill
+# Palette — dark theme (fixed categorical order + single sequential hue),
+# dark-band steps from the dataviz skill's reference palette.
 # --------------------------------------------------------------------------
 CATEGORICAL = {
-    "blue": "#2a78d6",
-    "aqua": "#1baf7a",
-    "yellow": "#eda100",
-    "green": "#008300",
-    "violet": "#4a3aa7",
-    "red": "#e34948",
-    "magenta": "#e87ba4",
-    "orange": "#eb6834",
+    "blue": "#3987e5",
+    "aqua": "#199e70",
+    "yellow": "#c98500",
+    "green": "#3ecf3e",
+    "violet": "#9085e9",
+    "red": "#e66767",
+    "magenta": "#d55181",
+    "orange": "#d95926",
 }
-SEQ_BLUE = ["#cde2fb", "#9ec5f4", "#5598e7", "#2a78d6", "#184f95"]
-INK_PRIMARY = "#0b0b0b"
-INK_SECONDARY = "#52514e"
-INK_MUTED = "#898781"
-GRIDLINE = "#e1e0d9"
-SURFACE = "#fcfcfb"
+# Low -> high magnitude, dark (recedes into the surface) -> bright (pops forward).
+SEQ_BLUE = ["#132840", "#184f95", "#1c5cab", "#256abf", "#3987e5", "#6da7ec", "#9ec5f4"]
+INK_PRIMARY = "#ffffff"
+INK_SECONDARY = "#c3c2b7"
+INK_MUTED = "#8f8d86"
+GRIDLINE = "#2c2c2a"
+SURFACE = "#171715"
+PAGE = "#0b0b0a"
+CARD = "#1a1a19"
 
 CATEGORY_COLOR = {
     "Beauty": CATEGORICAL["blue"],
@@ -38,6 +42,14 @@ CATEGORY_COLOR = {
     "Home": CATEGORICAL["green"],
 }
 
+KPI_ACCENTS = [
+    CATEGORICAL["blue"],
+    CATEGORICAL["aqua"],
+    CATEGORICAL["violet"],
+    CATEGORICAL["orange"],
+    CATEGORICAL["magenta"],
+]
+
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "db" / "ecommerce_sales.db"
 
@@ -45,6 +57,68 @@ st.set_page_config(
     page_title="E-Commerce Sales Dashboard",
     page_icon="\U0001F4CA",
     layout="wide",
+)
+
+st.markdown(
+    f"""
+    <style>
+    .stApp {{
+        background: radial-gradient(circle at 15% 0%, #14213a 0%, {PAGE} 38%, {PAGE} 100%);
+    }}
+    section[data-testid="stSidebar"] {{
+        background-color: {CARD};
+        border-right: 1px solid {GRIDLINE};
+    }}
+    section[data-testid="stSidebar"] * {{
+        color: {INK_SECONDARY};
+    }}
+    h1, h2, h3, h4, label, p, span {{
+        color: {INK_PRIMARY};
+    }}
+    div[data-testid="stMetric"], div[data-testid="stDataFrame"] {{
+        background-color: {CARD};
+        border: 1px solid {GRIDLINE};
+        border-radius: 12px;
+    }}
+    hr {{
+        border-color: {GRIDLINE} !important;
+    }}
+    .hero-title {{
+        font-size: 2.1rem;
+        font-weight: 800;
+        background: linear-gradient(90deg, {CATEGORICAL["blue"]}, {CATEGORICAL["aqua"]} 60%, {CATEGORICAL["violet"]});
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 0;
+    }}
+    .hero-caption {{
+        color: {INK_MUTED};
+        font-size: 0.92rem;
+        margin-top: 2px;
+    }}
+    .kpi-card {{
+        background: {CARD};
+        border: 1px solid {GRIDLINE};
+        border-radius: 12px;
+        padding: 14px 18px;
+        min-height: 96px;
+    }}
+    .kpi-label {{
+        color: {INK_MUTED};
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }}
+    .kpi-value {{
+        color: {INK_PRIMARY};
+        font-size: 1.65rem;
+        font-weight: 700;
+        margin-top: 4px;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True,
 )
 
 
@@ -73,7 +147,7 @@ def base_layout(fig: go.Figure, title: str) -> go.Figure:
         paper_bgcolor=SURFACE,
         font=dict(color=INK_SECONDARY, family="system-ui, -apple-system, Segoe UI, sans-serif"),
         margin=dict(l=10, r=10, t=50, b=10),
-        hoverlabel=dict(bgcolor="white", font_size=13),
+        hoverlabel=dict(bgcolor=CARD, bordercolor=GRIDLINE, font_size=13, font_color=INK_PRIMARY),
     )
     fig.update_xaxes(showgrid=False, linecolor=GRIDLINE, tickfont=dict(color=INK_MUTED))
     fig.update_yaxes(showgrid=True, gridcolor=GRIDLINE, tickfont=dict(color=INK_MUTED))
@@ -118,8 +192,13 @@ df = df_all.loc[mask]
 
 st.sidebar.caption(f"{len(df):,} of {len(df_all):,} orders match the current filters.")
 
-st.title("E-Commerce Sales Dashboard")
-st.caption("Source: ecommerce_sales_analytics_5000.csv → SQLite (db/ecommerce_sales.db)")
+st.markdown('<div class="hero-title">\U0001F6CD️ E-Commerce Sales Dashboard</div>', unsafe_allow_html=True)
+st.markdown(
+    '<div class="hero-caption">Source: ecommerce_sales_analytics_5000.csv &rarr; SQLite '
+    "(db/ecommerce_sales.db)</div>",
+    unsafe_allow_html=True,
+)
+st.write("")
 
 if df.empty:
     st.warning("No orders match the selected filters.")
@@ -128,13 +207,27 @@ if df.empty:
 # --------------------------------------------------------------------------
 # KPI row
 # --------------------------------------------------------------------------
-k1, k2, k3, k4, k5 = st.columns(5)
-k1.metric("Total Revenue", f"${df['revenue'].sum():,.0f}")
-k2.metric("Orders", f"{len(df):,}")
-k3.metric("Avg Order Value", f"${df['revenue'].mean():,.2f}")
-k4.metric("Avg Customer Rating", f"{df['customer_rating'].mean():.2f} / 5")
-k5.metric("Avg Delivery Days", f"{df['delivery_days'].mean():.1f}")
+kpis = [
+    ("\U0001F4B0 Total Revenue", f"${df['revenue'].sum():,.0f}"),
+    ("\U0001F4E6 Orders", f"{len(df):,}"),
+    ("\U0001F9FE Avg Order Value", f"${df['revenue'].mean():,.2f}"),
+    ("\U00002B50 Avg Rating", f"{df['customer_rating'].mean():.2f} / 5"),
+    ("\U0001F69A Avg Delivery Days", f"{df['delivery_days'].mean():.1f}"),
+]
+kpi_cols = st.columns(5)
+for col, (label, value), accent in zip(kpi_cols, kpis, KPI_ACCENTS):
+    with col:
+        st.markdown(
+            f"""
+            <div class="kpi-card" style="border-left:4px solid {accent};">
+                <div class="kpi-label">{label}</div>
+                <div class="kpi-value">{value}</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
+st.write("")
 st.divider()
 
 # --------------------------------------------------------------------------
@@ -154,7 +247,7 @@ with c1:
             hovertemplate="%{x|%b %Y}<br>Revenue: $%{y:,.0f}<extra></extra>",
         )
     )
-    fig = base_layout(fig, "Monthly Revenue Trend")
+    fig = base_layout(fig, "📈 Monthly Revenue Trend")
     st.plotly_chart(fig, use_container_width=True)
 
 with c2:
@@ -168,7 +261,7 @@ with c2:
             hovertemplate="%{y}<br>Revenue: $%{x:,.0f}<extra></extra>",
         )
     )
-    fig = base_layout(fig, "Revenue by Category")
+    fig = base_layout(fig, "🏷️ Revenue by Category")
     st.plotly_chart(fig, use_container_width=True)
 
 # --------------------------------------------------------------------------
@@ -186,7 +279,7 @@ with c3:
             hovertemplate="%{x}<br>Revenue: $%{y:,.0f}<extra></extra>",
         )
     )
-    fig = base_layout(fig, "Revenue by Region")
+    fig = base_layout(fig, "🌍 Revenue by Region")
     st.plotly_chart(fig, use_container_width=True)
 
 with c4:
@@ -199,7 +292,7 @@ with c4:
             hovertemplate="%{x}<br>Revenue: $%{y:,.0f}<extra></extra>",
         )
     )
-    fig = base_layout(fig, "Revenue by Payment Method")
+    fig = base_layout(fig, "💳 Revenue by Payment Method")
     st.plotly_chart(fig, use_container_width=True)
 
 # --------------------------------------------------------------------------
@@ -221,7 +314,7 @@ with c5:
             colorbar=dict(title="Revenue"),
         )
     )
-    fig = base_layout(fig, "Revenue: Category x Region")
+    fig = base_layout(fig, "🔥 Revenue: Category x Region")
     st.plotly_chart(fig, use_container_width=True)
 
 with c6:
@@ -237,7 +330,7 @@ with c6:
             )
         )
     fig.update_layout(showlegend=False)
-    fig = base_layout(fig, "Customer Rating Distribution by Category")
+    fig = base_layout(fig, "⭐ Rating Distribution by Category")
     st.plotly_chart(fig, use_container_width=True)
 
 st.divider()
@@ -245,7 +338,7 @@ st.divider()
 # --------------------------------------------------------------------------
 # Data table + download
 # --------------------------------------------------------------------------
-st.subheader("Filtered Orders")
+st.subheader("🗂️ Filtered Orders")
 show_cols = [
     "order_id", "order_date", "customer_id", "product_category", "region",
     "quantity", "unit_price", "discount", "payment_method", "delivery_days",
