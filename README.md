@@ -5,7 +5,7 @@ Jan 2022 – Sep 2035), built with **Streamlit** + **Plotly**, backed by a **SQL
 
 ## Live demo
 
-_Add the Streamlit Community Cloud URL here once deployed._
+https://ecommerce-sales-dashboard-alzjmcsp6l6wx5ztpecdck.streamlit.app/
 
 ## What it shows
 
