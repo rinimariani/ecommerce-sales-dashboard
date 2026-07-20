@@ -7,6 +7,20 @@ Jan 2022 – Sep 2035), built with **Streamlit** + **Plotly**, backed by a **SQL
 
 https://ecommerce-sales-dashboard-alzjmcsp6l6wx5ztpecdck.streamlit.app/
 
+## Screenshots
+
+**Performance overview** — KPI tiles, delivery-time gauge, orders trend, top customers, revenue by category
+
+![Performance overview](screenshots/overview.png)
+
+**Detailed analytics** — monthly revenue trend, revenue by category/region/payment method
+
+![Detailed analytics](screenshots/detailed-analytics.png)
+
+**Category x region heatmap & rating distribution**
+
+![Heatmap and rating distribution](screenshots/heatmap-ratings.png)
+
 ## What it shows
 
 - KPI tiles: total revenue, order count, average order value, average rating, average delivery days
